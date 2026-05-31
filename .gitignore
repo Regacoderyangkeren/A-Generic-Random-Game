@@ -1,0 +1,35 @@
+# Roblox place/model files
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Roblox Studio lock files
+*.rbxl.lock
+*.rbxlx.lock
+
+# Rojo / build outputs
+build/
+out/
+dist/
+sourcemap.json
+*.sourcemap.json
+
+# Wally generated packages
+Packages/
+ServerPackages/
+DevPackages/
+wally_packages/
+
+# VS Code local settings
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log

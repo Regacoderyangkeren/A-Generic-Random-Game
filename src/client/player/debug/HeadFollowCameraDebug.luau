@@ -38,7 +38,8 @@ end
 local function degrees(radians: number): string
 	return round(math.deg(radians), 1) .. " deg"
 end
- 
+
+-- binds the head follow debug system to a specific character and its relevant parts, as well as configuration for how the head should follow the camera,
 function HeadFollowDebug.Bind(config: {
 	character: Model,
 	humanoid: Humanoid,
@@ -65,13 +66,16 @@ end
 
 -- debug text object for displaying info in-game
 debugRegistry.RegisterSection({
+	-- unique identifier for this debug section
 	id = "head-follow",
 	title = "Head Follow",
 	interval = 0.25,
 
+	-- function that returns the rows of debug information to display, called at the specified interval
 	getRows = function()
 		local camera = workspace.CurrentCamera
 
+		-- if the camera is missing, return a single row indicating the issue
 		if not camera then
 			return {
 				{
@@ -83,12 +87,14 @@ debugRegistry.RegisterSection({
 			}
 		end
 
+		-- bunch of checks to make sure all necessary data is available, returning an error row if anything is missing
 		local humanoid = data.humanoid
 		local head = data.head
 		local torso = data.torso
 		local neck = data.neck
 		local neckC0 = data.neckC0
 
+		-- if any of the required parts or data is missing, return a single row indicating that the head follow debug info is not bound properly
 		if not humanoid or not head or not torso or not neck or not neckC0 then
 			return {
 				{
@@ -100,6 +106,7 @@ debugRegistry.RegisterSection({
 			}
 		end
 
+		-- calculate the camera's position and orientation relative to the head and torso, and return a list of debug rows with this information for display in the debug UI
 		local cameraCF = camera.CFrame
 		local headCF = head.CFrame
 		local torsoCF = torso.CFrame
@@ -108,8 +115,12 @@ debugRegistry.RegisterSection({
 		local headLook = headCF.LookVector
 		local torsoLook = torsoCF.LookVector
 
+		-- convert the camera's look vector into the local space of the torso to determine how the head should rotate to follow the camera,
+		-- and calculate angles and distances for debug display
 		local relativeCameraLook = torsoCF:VectorToObjectSpace(cameraLook)
 
+		-- calculate yaw and pitch angles from the relative camera look vector, as well as the distance from the head to the camera and the vertical angle difference,
+		-- which will be used to determine how much the neck should rotate to follow the camera
 		local yaw = math.deg(math.atan2(relativeCameraLook.X, -relativeCameraLook.Z))
 		local pitch = math.deg(math.asin(math.clamp(relativeCameraLook.Y, -1, 1)))
 
@@ -117,17 +128,24 @@ debugRegistry.RegisterSection({
 		local distance = headToCamera.Magnitude
 		local verticalDifference = headCF.Position.Y - cameraCF.Position.Y
 
+		-- calculate the vertical angle difference and horizontal cross product for determining neck rotation,
+		-- with checks to avoid division by zero when the camera is very close to the head
 		local asinDiffDist = 0
 		local headCross = 0
 
+		-- only calculate the angles if the camera is a reasonable distance from the head to avoid issues with very close distances
+		-- causing erratic angles due to small positional differences
 		if distance > 0.001 then
 			asinDiffDist = math.asin(math.clamp(verticalDifference / distance, -1, 1))
 			headCross = headToCamera.Unit:Cross(torsoLook).Y
 		end
 
+		-- calculate the target X and Z rotation angles for the neck based on the vertical angle difference and horizontal cross product,
+		-- multiplied by the respective factors for tuning the head movement
 		local targetX = -asinDiffDist * data.headVerticalFactor
 		local targetZ = -headCross * data.headHorizontalFactor
 
+		-- return a list of rows to display in the debug UI, including camera subject, angles, vectors, and neck C0 position
 		return {
 			{
 				id = "camera-subject",

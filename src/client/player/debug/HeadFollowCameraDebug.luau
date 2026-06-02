@@ -5,6 +5,7 @@ local clientRoot = script.Parent.Parent.Parent
 
 -- modules
 local debugRegistry = require(clientRoot:WaitForChild("debug"):WaitForChild("DebugRegistry"))
+local debugFormat = require(clientRoot.debug:WaitForChild("DebugFormatUtil"))
 
 -- constants
 local HeadFollowDebug = {}
@@ -22,22 +23,6 @@ local data = {
 	headVerticalFactor = 0.6,
 	updateSpeed = 0.25,
 }
-
--- utility functions for finding debug text object and formatting text
-local function round(value: number, decimals: number?): string
-	decimals = decimals or 2
-	return string.format("%." .. tostring(decimals) .. "f", value :: number)
-end
-
--- looks for a text object in the debug GUI or player GUI to display debug info
-local function vectorText(vector: Vector3): string
-	return round(vector.X) .. ", " .. round(vector.Y) .. ", " .. round(vector.Z)
-end
-
--- heuristic to find a text object in the player's GUI for displaying debug info
-local function degrees(radians: number): string
-	return round(math.deg(radians), 1) .. " deg"
-end
 
 -- binds the head follow debug system to a specific character and its relevant parts, as well as configuration for how the head should follow the camera,
 function HeadFollowDebug.Bind(config: {
@@ -158,7 +143,7 @@ debugRegistry.RegisterSection({
 			{
 				id = "yaw",
 				label = "Camera Yaw",
-				value = round(yaw, 1) .. " deg",
+				value = debugFormat.Round(yaw, 1) .. " deg",
 				raw = yaw,
 				ok = true
 			},
@@ -166,63 +151,63 @@ debugRegistry.RegisterSection({
 			{
 				id = "pitch",
 				label = "Camera Pitch",
-				value = round(pitch, 1) .. " deg",
+				value = debugFormat.Round(pitch, 1) .. " deg",
 				raw = pitch,
 			},
 
 			{
 				id = "camera-look",
 				label = "Camera LookVector",
-				value = vectorText(cameraLook),
+				value = debugFormat.Vector3(cameraLook),
 				raw = cameraLook,
 			},
 
 			{
 				id = "head-look",
 				label = "Head LookVector",
-				value = vectorText(headLook),
+				value = debugFormat.Vector3(headLook),
 				raw = headLook,
 			},
 
 			{
 				id = "distance",
 				label = "Head-Camera Distance",
-				value = round(distance, 2),
+				value = debugFormat.Round(distance, 2),
 				raw = distance,
 			},
 
 			{
 				id = "vertical-angle",
 				label = "Vertical Angle",
-				value = degrees(asinDiffDist),
+				value = debugFormat.Degrees(asinDiffDist),
 				raw = asinDiffDist,
 			},
 
 			{
 				id = "head-cross",
 				label = "Horizontal Cross",
-				value = round(headCross, 3),
+				value = debugFormat.Round(headCross, 3),
 				raw = headCross,
 			},
 
 			{
 				id = "target-x",
 				label = "Target X Rotation",
-				value = degrees(targetX),
+				value = debugFormat.Degrees(targetX),
 				raw = targetX,
 			},
 
 			{
 				id = "target-z",
 				label = "Target Z Rotation",
-				value = degrees(targetZ),
+				value = debugFormat.Degrees(targetZ),
 				raw = targetZ,
 			},
 
 			{
 				id = "neck-c0",
 				label = "Neck C0 Position",
-				value = vectorText(neck.C0.Position),
+				value = debugFormat.Vector3(neck.C0.Position),
 				raw = neck.C0,
 			},
 		}

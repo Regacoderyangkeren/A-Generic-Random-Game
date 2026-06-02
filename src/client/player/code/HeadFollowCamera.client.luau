@@ -4,12 +4,13 @@ local runService = game:GetService("RunService")
 local playerService = game:GetService("Players")
 
 -- modules
+local constants = require(script.Parent.Parent:WaitForChild("constants"):WaitForChild("HeadFollowCameraConstants"))
 local headFollowDebug = require(script.Parent.Parent:WaitForChild("debug"):WaitForChild("HeadFollowCameraDebug"))
 
 -- constants
-local headHorizontalFactor = 1
-local headVerticalFactor = .6
-local updateSpeed = .5 / 2
+local headHorizontalFactor = constants.HEAD_HORIZONTAL_FACTOR
+local headVerticalFactor = constants.HEAD_VERTICAL_FACTOR
+local updateSpeed = constants.UPDATE_SPEED
 
 -- variables
 local player = playerService.LocalPlayer
@@ -53,22 +54,40 @@ local function setupCharacter(char: Model)
 	})
 
 	-- connect to RenderStepped to update the neck's C0 based on the camera's position relative to the head
-	renderConnection = runService.RenderStepped:Connect(function()
+	renderConnection = runService.RenderStepped:Connect(function(deltaTime)
+		camera = workspace.CurrentCamera
+
+		if not camera then
+			return
+		end
+
+		-- only update the neck if the camera's subject is the humanoid, and all necessary parts are available, to ensure we are controlling the correct character's head
 		if torso and head and neck and camera.CameraSubject == humanoid then
 			local cameraCF = camera.CFrame
 			local headCF = head.CFrame
 			local torsoLV = torso.CFrame.LookVector
 
-			local dist = (headCF.Position - cameraCF.Position).Magnitude
-			local diff = headCF.Y - cameraCF.Y
+			local headToCamera = headCF.Position - cameraCF.Position
+			local dist = headToCamera.Magnitude
 
-			local asinDiffDist = math.asin(diff / dist)
-			local headCross = ((headCF.Position - cameraCF.Position).Unit:Cross(torsoLV)).Y
+			if dist <= 0.001 then
+				return
+			end
 
-			neck.C0 = neck.C0:Lerp(
-				neckC0 * CFrame.Angles(-1 * asinDiffDist * headVerticalFactor, 0, -1 * headCross * headHorizontalFactor),
-				updateSpeed
+			local diff = headCF.Position.Y - cameraCF.Position.Y
+
+			local asinDiffDist = math.asin(math.clamp(diff / dist, -1, 1))
+			local headCross = headToCamera.Unit:Cross(torsoLV).Y
+
+			local targetC0 = neckC0 * CFrame.Angles(
+				-asinDiffDist * headVerticalFactor,
+				0,
+				-headCross * headHorizontalFactor
 			)
+
+			local alpha = 1 - math.pow(1 - updateSpeed, deltaTime * 60)
+
+			neck.C0 = neck.C0:Lerp(targetC0, alpha)
 		end
 	end)
 end

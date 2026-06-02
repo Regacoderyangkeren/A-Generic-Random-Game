@@ -3,31 +3,12 @@
 local DebugRegistry = {}
 
 -- Types
-export type DebugRow = {
-	id: string,
-	label: string,
-	value: string,
-	raw: any?,
-	ok: boolean?,
-}
+local DebugTypes = require(script.Parent:WaitForChild("DebugTypes"))
 
--- DebugSection represents a section in the debug UI, containing multiple rows of debug information.
-export type DebugSection = {
-	id: string,
-	title: string,
-	enabled: boolean,
-	rows: { DebugRow },
-}
-
--- DebugEntry represents an internal entry in the DebugRegistry, containing configuration and state for a debug section.
-type DebugEntry = {
-	id: string,
-	title: string,
-	enabled: boolean,
-	interval: number,
-	timer: number,
-	getRows: () -> { DebugRow },
-}
+type DebugRow = DebugTypes.DebugRow
+type DebugSection = DebugTypes.DebugSection
+type DebugEntry = DebugTypes.DebugEntry
+type DebugChecklist = DebugTypes.DebugChecklist
 
 -- BindableEvent used to signal when debug sections are updated, allowing the UI to refresh accordingly.
 local updatedEvent = Instance.new("BindableEvent")
@@ -91,7 +72,7 @@ end
 
 -- Retrieves a list of checklist definitions for all registered debug sections, providing information about their IDs, labels, and enabled states for use in the debug UI.
 function DebugRegistry.GetChecklistDefinitions()
-	local list = {}
+	local list: { DebugChecklist } = {}
 
 	for _, entry in entries do
 		table.insert(list, {

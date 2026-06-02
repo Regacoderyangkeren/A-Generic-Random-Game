@@ -3,14 +3,13 @@
 local runService = game:GetService("RunService")
 local playerService = game:GetService("Players")
 
+-- modules
+local headFollowDebug = require(script.Parent.Parent:WaitForChild("debug"):WaitForChild("HeadFollowCameraDebug"))
+
 -- constants
 local headHorizontalFactor = 1
 local headVerticalFactor = .6
 local updateSpeed = .5 / 2
-
-local debugOutput = true
-local debugInterval = 0.25
-local debugTimer = 0
 
 -- variables
 local player = playerService.LocalPlayer
@@ -40,41 +39,25 @@ local function setupCharacter(char: Model)
 	local neckC0 = neck.C0
 	neck.MaxVelocity = 1 / 3
 
+	headFollowDebug.Bind({
+		character = char,
+		humanoid = humanoid,
+		head = head,
+		torso = torso,
+		neck = neck,
+		neckC0 = neckC0,
+
+		headHorizontalFactor = headHorizontalFactor,
+		headVerticalFactor = headVerticalFactor,
+		updateSpeed = updateSpeed,
+	})
+
 	-- connect to RenderStepped to update the neck's C0 based on the camera's position relative to the head
-	renderConnection = runService.RenderStepped:Connect(function(deltaTime)
+	renderConnection = runService.RenderStepped:Connect(function()
 		if torso and head and neck and camera.CameraSubject == humanoid then
 			local cameraCF = camera.CFrame
 			local headCF = head.CFrame
 			local torsoLV = torso.CFrame.LookVector
-
-			-- debug output for camera and head orientation
-			debugTimer += deltaTime
-
-			-- output the camera's yaw and pitch relative to the character, as well as the world and head look vectors, at the specified debug interval
-			if debugOutput and debugTimer >= debugInterval then
-				debugTimer = 0
-
-				local cameraLook = cameraCF.LookVector
-				local headLook = headCF.LookVector
-
-				-- Camera direction relative to the character's torso
-				local relativeCameraLook = torso.CFrame:VectorToObjectSpace(cameraLook)
-
-				local yaw = math.deg(math.atan2(relativeCameraLook.X, -relativeCameraLook.Z))
-				local pitch = math.deg(math.asin(relativeCameraLook.Y))
-
-				print(string.format(
-					"Camera looking | Yaw: %.1f° | Pitch: %.1f° | World LookVector: %.2f, %.2f, %.2f | Head LookVector: %.2f, %.2f, %.2f",
-					yaw,
-					pitch,
-					cameraLook.X,
-					cameraLook.Y,
-					cameraLook.Z,
-					headLook.X,
-					headLook.Y,
-					headLook.Z
-				))
-			end
 
 			local dist = (headCF.Position - cameraCF.Position).Magnitude
 			local diff = headCF.Y - cameraCF.Y
